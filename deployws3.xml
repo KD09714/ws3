@@ -1,0 +1,343 @@
+<!-- Change History-->
+
+<!-- 08/21/2012     Dharmendra Kumar      Adding code to handle corda updates. -->
+<!-- 07/16/2012     Jayasimha Yerramilli  Removing config.properties backup from deployment -->
+<!-- 04/23/2012     Jayasimha Yerramilli  Removing websso/websssoconfig backup from deployment -->
+<!-- 01/11/2012     Dharmendra Kumar      Fixed the regular expression to match 0-9 -->
+<!-- 01/05/2012     Dharmendra Kumar      Added support to load entitlement if authorizations.xml is changed-->
+<!-- 01/04/2012     Dharmendra Kumar      Added support to execute ws3.sql if it is changed since last execution -->
+<!-- 12/21/2011     Dharmendra Kumar      Added support for sams implementaion to backup 2 cfg file and restore -->
+<!-- 12/18/2011     Dharmendra Kumar      Added target to see if target is up-to-date and skip deployment in that case-->
+<!-- 12/14/2011     Dharmendra Kumar      Changed the timestamp format to yyyyMMdd to help sorting -->
+<!-- 12/07/2011     Dharmendra Kumar      Separate the target to kill pipeman process           -->
+<!-- 12/06/2011     Dharmendra Kumar      Added support to backup and restore scheduledJobs.xml -->
+<!-- 12/05/2011		  Dharmendra Kumar      Included Wrapper Target StopEnv & StartEnv            -->
+<!-- 12/04/2011		  Dharmendra Kumar      Initial Coding to Support Automated WS3 Deployment    -->
+<!-- rev=2.10-->
+<project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
+	<property file="cfg/deployws3.cfg"/>
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
+	
+	<tstamp>
+		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
+	</tstamp>
+	<echo message="Timestamp : ${TimeStamp}"/>
+
+	<target name="StopProspero" if="ProsperoTomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${ProsperoTomcat}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="stop"/>
+			<arg value="${ProsperoTomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>
+	
+	<target name="KillPipeman" if="KillProcess">
+		<exec executable="taskkill">
+			<arg value="/F"/>
+			<arg value="/IM"/>
+			<arg value="${KillProcess}"/>
+		</exec>
+	</target>
+	
+	<target name="StopWS3" if="WS3Tomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${WS3Tomcat}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="stop"/>
+			<arg value="${WS3Tomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>	
+	
+	<target name="StopPosting" if="PostingTomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${PostingTomcat}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="stop"/>
+			<arg value="${PostingTomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>	
+	
+	<target name="StopAFS" if="AFSTomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${AFSTomcat}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="stop"/>
+			<arg value="${AFSTomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>	
+			
+	<target name="StopCSA" if="CSATomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${CSATomcat}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="stop"/>
+			<arg value="${CSATomcat}"/>
+		</exec>
+			<sleep seconds="10"/>
+	</target>
+	
+	<target name="StopCorda" if="CordaService">
+		<exec executable="sc.exe" failonerror="false">
+			<arg value="config"/>
+			<arg value="${CordaService}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="false">
+			<arg value="stop"/>
+			<arg value="${CordaService}"/>
+		</exec>
+			<sleep seconds="10"/>
+	</target>
+	
+	<target name="StopEnv" depends="StopProspero, KillPipeman, StopWS3, StopPosting, StopAFS, StopCSA">
+		<echo message="Stopping Tomcat Complete.."/>
+	</target>
+	
+	<target name="StartCSA" if="CSATomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${CSATomcat}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="start"/>
+			<arg value="${CSATomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>	
+	
+	<target name="StartAFS" if="AFSTomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${AFSTomcat}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="start"/>
+			<arg value="${AFSTomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>
+
+	<target name="StartPosting" if="PostingTomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${PostingTomcat}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="start"/>
+			<arg value="${PostingTomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>
+	
+	<target name="StartWS3" if="WS3Tomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${WS3Tomcat}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="start"/>
+			<arg value="${WS3Tomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>
+
+	<target name="StartProspero" if="ProsperoTomcat">
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="config"/>
+			<arg value="${ProsperoTomcat}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="start"/>
+			<arg value="${ProsperoTomcat}"/>
+		</exec>
+		<sleep seconds="10"/>
+	</target>
+	
+	<target name="StartCorda" if="CordaService">
+		<exec executable="sc.exe" failonerror="false">
+			<arg value="config"/>
+			<arg value="${CordaService}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="false">
+			<arg value="start"/>
+			<arg value="${CordaService}"/>
+		</exec>
+			<sleep seconds="10"/>
+	</target>
+	
+	<target name="StartEnv" depends="StartCSA, StartAFS, StartPosting, StartWS3, StartProspero">
+		<echo message="Starting Tomcat Complete.."/>
+	</target>
+	
+	<target name="BackupCfgFiles">
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/${authxml}" todir="${BackupDir}/config-${TimeStamp}" preservelastmodified="true"/>
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/batchjobs/LoadCompanyBundleClient.bat" todir="${BackupDir}/config-${TimeStamp}" />
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/batchjobs/variables.bat" todir="${BackupDir}/config-${TimeStamp}" />
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/lib/servlet-api.jar" todir="${BackupDir}/config-${TimeStamp}" />
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" todir="${BackupDir}/config-${TimeStamp}" />
+	</target>
+
+	<target name="BackupCurrDeployment">
+		<move todir="${DeployBase}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
+			<fileset dir="${DeployBase}/${DeployDir}"/>
+		</move>
+	</target>
+	
+	<target name="BackupCurrCorda">
+		<move todir="${CordaDestPath}/wealthStation/${CordaType}-${TimeStamp}" preservelastmodified="true">
+			<fileset dir="${CordaDestPath}/wealthStation/${CordaType}"/>
+		</move>
+	</target>
+
+
+	<target name="CopyExtractLatestWar">
+		<copy file="${WarSourcePath}/${WSWar}" todir="${WarDestPath}" preservelastmodified="true"/>
+		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
+		<unwar src="${WarDestPath}/${WSWar}" dest="${DeployBase}/${DeployDir}"/>
+	</target>
+	
+	<target name="RestoreCfgFiles">
+		<copy file="${BackupDir}/config-${TimeStamp}/LoadCompanyBundleClient.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
+		<copy file="${BackupDir}/config-${TimeStamp}/variables.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
+		<copy file="${BackupDir}/config-${TimeStamp}/servlet-api.jar" todir="${DeployBase}/${DeployDir}/WEB-INF/lib" />
+		<copy file="${BackupDir}/config-${TimeStamp}/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs"/>
+	</target>
+	
+	<target name="Copycsafile" >
+	    <copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/firm-setup.xml" todir="${CSADeployBase/${CSADeployDir}/WEB-INF/config/firmcreation" />
+		<echo message="Copied firm-setup.xml from wasatch to csa" />
+    </target>
+	
+	<target name="FindDeployedWS3SqlRev">
+		<echo message="Processing ${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" />
+		<loadfile srcfile="${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" property="revision" failonerror="false">
+			<filterchain>
+				<linecontains>
+					<contains value="${ws3sql}"/>
+				</linecontains>
+			</filterchain>
+		</loadfile>
+		<grep in="${revision}" regex="('[0-9]+')" property="deployedrev"/>
+		<echo message="Deployed Revision : ${deployedrev}" />
+	</target>
+
+	<target name="FindLatestWS3SqlRev">
+		<echo message="Processing ${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" />
+		<loadfile srcfile="${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" property="revision1" failonerror="false">
+			<filterchain>
+				<linecontains>
+					<contains value="${ws3sql}"/>
+				</linecontains>
+			</filterchain>
+		</loadfile>
+		<grep in="${revision1}" regex="('[0-9]+')" property="newrev"/>
+		<echo message="Latest Revision : ${newrev}" />
+	</target>
+	
+	<target name="ExecuteWS3sql" depends="FindDeployedWS3SqlRev, FindLatestWS3SqlRev">
+		<if>
+		<equals arg1="${deployedrev}" arg2="${newrev}" />
+			<then>
+				<echo message="Database is UP-To-Date, Skipping ${ws3sql} execution." />
+			</then>
+		<else>
+			<echo message="Executing ${ws3sql}" />
+			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" target="updateWealthStationDatabase"/>
+		</else>
+		</if>
+	</target>
+	
+	<target name="LoadEntitlements" depends="BackupCfgFiles">
+		<uptodate targetfile="${BackupDir}/config-${TimeStamp}/${authxml}" srcfile="${DeployBase}/${DeployDir}/WEB-INF/loader/${authxml}" property="EntitleUpToDate"/>
+		<if>
+		<equals arg1="${EntitleUpToDate}" arg2="true"/>
+		<then>
+			<echo message="Entitlements are Up-To-Date, Skipping load of entitlements." />
+		</then>
+		<else>
+			<echo message="Loading Entitlements." />
+			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" target="loadAuthorizations" />
+		</else>
+		</if>
+	</target>
+	
+	<target name="UpdateCorda">
+		<uptodate targetfile="${DeployBase}/${DeployDir}-${TimeStamp}/externalPkgs/cordaChartDefinitions/${CordaType}.zip" srcfile="${DeployBase}/${DeployDir}/externalPkgs/cordaChartDefinitions/${CordaType}.zip" property="CordaUpToDate"/>
+		<if>
+		<equals arg1="${CordaUpToDate}" arg2="true"/>
+		<then>
+			<echo message="Corda is Up-To-Date, Skipping Corda Update." />
+		</then>
+		<else>
+			<echo message="Updating Corda." />
+			<antcall target="StopCorda" />
+			<copy todir="${CordaDestPath}" preservelastmodified="true" overwrite="true">
+				<fileset dir="${DeployBase}/${DeployDir}/planning/chartdef" />
+			</copy>
+			
+			<antcall target="BackupCurrCorda" />
+			<unwar src="${DeployBase}/${DeployDir}/externalPkgs/cordaChartDefinitions/${CordaType}.zip" dest="${CordaDestPath}/wealthStation/${CordaType}"/>
+			<antcall target="StartCorda" />
+			
+			<move todir="${BackupDir}/${CordaType}-${TimeStamp}" preservelastmodified="true" failonerror="false">
+				<fileset dir="${CordaDestPath}/wealthStation/${CordaType}-${TimeStamp}"/>
+			</move>
+		</else>
+		</if>
+	</target>
+	
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, Copycsafile, FindLatestWS3SqlRev, ExecuteWS3sql, LoadEntitlements, UpdateCorda, StartEnv">
+		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
+		<echo message=" Moving the backup directories...!!"/>
+		<delete dir="${BackupDir}/config-${TimeStamp}"/>
+		<move todir="${BackupDir}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
+			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
+		</move>
+	</target>
+
+	<target name="WS3Deploy">
+		<echo message="Comparing timestamp of war." />
+		<uptodate targetfile="${WarDestPath}/${WSWar}" srcfile="${WarSourcePath}/${WSWar}" property="WarUpToDate"/>
+	
+		<if>
+		<equals arg1="${WarUpToDate}" arg2="true"/>
+		<then>
+			<echo message="Target is Up-To-Date, Skipping Deployment." />
+		</then>
+		<else>	
+			<antcall target="CompleteDeploy" />
+		</else>
+		</if>
+	</target>
+	
+	<target name="RestartEnv" depends="StopEnv, StartEnv">
+		<echo message="Tomcat restart completed."/>
+	</target>
+</project>
