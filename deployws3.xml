@@ -1,19 +1,20 @@
 <!-- Change History-->
 
-<!-- 08/21/2012     Dharmendra Kumar      Adding code to handle corda updates. -->
-<!-- 07/16/2012     Jayasimha Yerramilli  Removing config.properties backup from deployment -->
-<!-- 04/23/2012     Jayasimha Yerramilli  Removing websso/websssoconfig backup from deployment -->
-<!-- 01/11/2012     Dharmendra Kumar      Fixed the regular expression to match 0-9 -->
-<!-- 01/05/2012     Dharmendra Kumar      Added support to load entitlement if authorizations.xml is changed-->
-<!-- 01/04/2012     Dharmendra Kumar      Added support to execute ws3.sql if it is changed since last execution -->
-<!-- 12/21/2011     Dharmendra Kumar      Added support for sams implementaion to backup 2 cfg file and restore -->
-<!-- 12/18/2011     Dharmendra Kumar      Added target to see if target is up-to-date and skip deployment in that case-->
-<!-- 12/14/2011     Dharmendra Kumar      Changed the timestamp format to yyyyMMdd to help sorting -->
-<!-- 12/07/2011     Dharmendra Kumar      Separate the target to kill pipeman process           -->
-<!-- 12/06/2011     Dharmendra Kumar      Added support to backup and restore scheduledJobs.xml -->
-<!-- 12/05/2011		  Dharmendra Kumar      Included Wrapper Target StopEnv & StartEnv            -->
-<!-- 12/04/2011		  Dharmendra Kumar      Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.10-->
+<!-- 05/30/2014     Dharmendra Kumar  Fixed the sql revision finding sequence.   -->
+<!-- 08/21/2012     Dharmendra Kumar       Adding code to handle corda updates. -->
+<!-- 07/16/2012     Jayasimha Yerramilli Removing config.properties backup from deployment -->
+<!-- 04/23/2012     Jayasimha Yerramilli Removing websso/websssoconfig backup from deployment -->
+<!-- 01/11/2012     Dharmendra Kumar  Fixed the regular expression to match 0-9 -->
+<!-- 01/05/2012     Dharmendra Kumar  Added support to load entitlement if authorizations.xml is changed-->
+<!-- 01/04/2012     Dharmendra Kumar  Added support to execute ws3.sql if it is changed since last execution -->
+<!-- 12/21/2011     Dharmendra Kumar  Added support for sams implementaion to backup 2 cfg file and restore -->
+<!-- 12/18/2011     Dharmendra Kumar  Added target to see if target is up-to-date and skip deployment in that case-->
+<!-- 12/14/2011     Dharmendra Kumar  Changed the timestamp format to yyyyMMdd to help sorting -->
+<!-- 12/07/2011     Dharmendra Kumar  Separate the target to kill pipeman process           -->
+<!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
+<!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
+<!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
+<!-- rev=2.11-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<property file="cfg/deployws3.cfg"/>
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
@@ -261,7 +262,7 @@
 		<echo message="Latest Revision : ${newrev}" />
 	</target>
 	
-	<target name="ExecuteWS3sql" depends="FindDeployedWS3SqlRev, FindLatestWS3SqlRev">
+	<target name="ExecuteWS3sql">
 		<if>
 		<equals arg1="${deployedrev}" arg2="${newrev}" />
 			<then>
@@ -269,7 +270,7 @@
 			</then>
 		<else>
 			<echo message="Executing ${ws3sql}" />
-			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" target="updateWealthStationDatabase"/>
+			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="updateWealthStationDatabase"/>
 		</else>
 		</if>
 	</target>
@@ -313,7 +314,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, Copycsafile, FindLatestWS3SqlRev, ExecuteWS3sql, LoadEntitlements, UpdateCorda, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, FindDeployedWS3SqlRev, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, Copycsafile, FindLatestWS3SqlRev, ExecuteWS3sql, LoadEntitlements, UpdateCorda, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
