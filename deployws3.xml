@@ -14,7 +14,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.13-->
+<!-- rev=2.14-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<property file="cfg/deployws3.cfg"/>
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
@@ -270,7 +270,7 @@
 		</if>
 	</target>
 	
-	<target name="LoadEntitlements" depends="BackupCfgFiles">
+	<target name="LoadEntitlements">
 		<uptodate targetfile="${BackupDir}/config-${TimeStamp}/${authxml}" srcfile="${DeployBase}/${DeployDir}/WEB-INF/loader/${authxml}" property="EntitleUpToDate"/>
 		<if>
 		<equals arg1="${EntitleUpToDate}" arg2="true"/>
