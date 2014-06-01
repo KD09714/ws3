@@ -14,11 +14,12 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.14-->
+<!-- rev=2.15-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
-	<property file="cfg/deployws3.cfg"/>
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
+	<property file="cfg/deployws3.cfg"/>
+	<var file="cfg/env-variable.cfg" />
 	
 	<tstamp>
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
@@ -279,7 +280,7 @@
 		</then>
 		<else>
 			<echo message="Loading Entitlements." />
-			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" target="loadAuthorizations" />
+			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="loadAuthorizations" />
 			<copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/firm-setup.xml" todir="${CSADeployDir}/WEB-INF/config/firmcreation" preservelastmodified="true" overwrite="true"/>
 		</else>
 		</if>
