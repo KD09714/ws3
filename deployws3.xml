@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 06/02/2014     Dharmendra Kumar  Accomodating loadcompanybundle and loading jobs. -->
 <!-- 05/30/2014     Dharmendra Kumar  Fixed the sql revision finding sequence.   -->
 <!-- 08/21/2012     Dharmendra        Adding code to handle corda updates. -->
 <!-- 07/16/2012     Jayasimha Yerramilli Removing config.properties backup from deployment -->
@@ -14,18 +15,12 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.16-->
+<!-- rev=2.17-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
 	<property file="cfg/deployws3.cfg"/>
-	
-	<if>
-	<available file="cfg/env-variable.cfg" />
-	<then>
-		<var file="cfg/env-variable.cfg" />
-	</then>
-	</if>
+	<var file="cfg/env-variable.cfg" />
 	
 	<tstamp>
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
@@ -317,7 +312,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, FindDeployedWS3SqlRev, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, FindLatestWS3SqlRev, ExecuteWS3sql, LoadEntitlements, UpdateCorda, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, FindDeployedWS3SqlRev, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, FindLatestWS3SqlRev, ExecuteWS3sql, LoadEntitlements, LoadCompanyBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -343,5 +338,33 @@
 	
 	<target name="RestartEnv" depends="StopEnv, StartEnv">
 		<echo message="Tomcat restart completed."/>
+	</target>
+	
+	<target name="LoadCompanyBundle">
+		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
+			<arg value="/c"/>
+			<arg value="LoadCompanyBundleClient.bat"/>
+		</exec>
+	</target>
+
+	<target name="CompareAndLoadJob">
+		<basename property="customdir" file="${CMPJar}" suffix=".jar"/>
+		<uptodate targetfile="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" srcfile="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" property="JobsUpToDate"/>
+		<if>
+		<equals arg1="${JobsUpToDate}" arg2="true"/>
+		<then>
+			<echo message="Jobs are Up-To-Date, Skipping load of Jobs." />
+		</then>
+		<else>
+			<antcall target="LoadJobs" />
+		</else>
+		</if>
+	</target>
+	
+	<target name="LoadJobs" if="autoloadjobs">
+		<basename property="customdir" file="${CMPJar}" suffix=".jar"/>
+		<echo message="Loading Jobs." />
+		<copy file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs" preservelastmodified="true" overwrite="true"/>
+		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="doDeleteAndReloadAllJobs" />
 	</target>
 </project>
