@@ -15,7 +15,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.19-->
+<!-- rev=2.20-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -354,14 +354,27 @@
 
 	<target name="CompareAndLoadJob" if="autoloadjobs">
 		<basename property="customdir" file="${CMPJar}" suffix=".jar"/>
-		<uptodate targetfile="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" srcfile="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" property="JobsUpToDate"/>
+		
+		<waitfor maxwait="300" maxwaitunit="second">
+		        <available file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml"/>
+		</waitfor>
+
 		<if>
-		<equals arg1="${JobsUpToDate}" arg2="true"/>
+		<available file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" />
 		<then>
-			<echo message="Jobs are Up-To-Date, Skipping load of Jobs." />
+			<uptodate targetfile="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" srcfile="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" property="JobsUpToDate"/>
+			<if>
+			<equals arg1="${JobsUpToDate}" arg2="true"/>
+			<then>
+				<echo message="Jobs are Up-To-Date, Skipping load of Jobs." />
+			</then>
+			<else>
+				<antcall target="LoadJobs" />
+			</else>
+			</if>
 		</then>
 		<else>
-			<antcall target="LoadJobs" />
+			<echo message="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml does not exists, try executing load jobs later."/>
 		</else>
 		</if>
 	</target>
