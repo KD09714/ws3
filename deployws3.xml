@@ -15,12 +15,17 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.18-->
+<!-- rev=2.19-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
 	<property file="cfg/deployws3.cfg"/>
-	<var file="cfg/env-variable.cfg" />
+	<if>
+	<available file="cfg/env-variable.cfg" />
+	<then>
+		<var file="cfg/env-variable.cfg" />
+	</then>
+	</if>
 	
 	<tstamp>
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
