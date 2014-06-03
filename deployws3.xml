@@ -15,7 +15,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.21-->
+<!-- rev=2.22-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -237,43 +237,57 @@
 		<copy file="${BackupDir}/config-${TimeStamp}/servlet-api.jar" todir="${DeployBase}/${DeployDir}/WEB-INF/lib" />
 		<copy file="${BackupDir}/config-${TimeStamp}/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs"/>
 	</target>
-	
-	<target name="FindDeployedWS3SqlRev">
-		<echo message="Processing ${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" />
-		<loadfile srcfile="${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" property="revision" failonerror="false">
-			<filterchain>
-				<linecontains>
-					<contains value="${ws3sql}"/>
-				</linecontains>
-			</filterchain>
-		</loadfile>
-		<grep in="${revision}" regex="('[0-9]+')" property="deployedrev"/>
-		<echo message="Deployed Revision : ${deployedrev}" />
-	</target>
 
-	<target name="FindLatestWS3SqlRev">
-		<echo message="Processing ${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" />
-		<loadfile srcfile="${DeployBase}/${DeployDir}/WEB-INF/sql/${ws3sql}" property="revision1" failonerror="false">
-			<filterchain>
-				<linecontains>
-					<contains value="${ws3sql}"/>
-				</linecontains>
-			</filterchain>
-		</loadfile>
-		<grep in="${revision1}" regex="('[0-9]+')" property="newrev"/>
-		<echo message="Latest Revision : ${newrev}" />
+	<target name="CompareAndLoadsql">
+		<for list="${ws3sql}" param="sqlname">
+		<sequential>
+			<var name="deployedrev" unset="true"/>
+			<var name="newrev" unset="true"/>
+			<var name="revision" unset="true"/>
+			<var name="revision1" unset="true"/>
+			<var name="sqlfilename" unset="true"/>
+			<basename file="${DeployBase}/${DeployDir}/WEB-INF/sql/@{sqlname}" property="sqlfilename" />
+			<echo message="Processing ${DeployBase}/${DeployDir}/WEB-INF/sql/@{sqlname}" />
+			<loadfile srcfile="${DeployBase}/${DeployDir}-${TimeStamp}/WEB-INF/sql/@{sqlname}" property="revision" failonerror="false">
+				<filterchain>
+					<linecontains>
+						<contains value="${sqlfilename}"/>
+					</linecontains>
+				</filterchain>
+			</loadfile>
+			<grep in="${revision}" regex="('[0-9]+')" property="deployedrev"/>
+			<echo message="Deployed Revision : ${deployedrev}" />
+			<loadfile srcfile="${DeployBase}/${DeployDir}/WEB-INF/sql/@{sqlname}" property="revision1" failonerror="false">
+				<filterchain>
+					<linecontains>
+						<contains value="${sqlfilename}"/>
+					</linecontains>
+				</filterchain>	
+			</loadfile>
+			<grep in="${revision1}" regex="('[0-9]+')" property="newrev"/>
+			<echo message="Current Revision : ${newrev}" />
+			
+			<if>
+			<equals arg1="${deployedrev}" arg2="${newrev}" />
+			<else>
+				<echo message="Change detected in ${DeployBase}/${DeployDir}/WEB-INF/sql/@{sqlname}" />
+				<property name="executesql" value="true" />
+			</else>
+			</if>
+		</sequential>
+		</for>
 	</target>
 	
 	<target name="ExecuteWS3sql">
 		<if>
-		<equals arg1="${deployedrev}" arg2="${newrev}" />
+		<equals arg1="${executesql}" arg2="true" />
 			<then>
-				<echo message="Database is UP-To-Date, Skipping ${ws3sql} execution." />
+				<echo message="Executing ${ws3sql}" />
+				<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="${antsqltarget}"/>
 			</then>
-		<else>
-			<echo message="Executing ${ws3sql}" />
-			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="${antsqltarget}"/>
-		</else>
+			<else>
+				<echo message="Database is UP-To-Date, Skipping ${ws3sql} execution." />
+			</else>
 		</if>
 	</target>
 	
@@ -317,7 +331,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, FindDeployedWS3SqlRev, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, FindLatestWS3SqlRev, ExecuteWS3sql, LoadEntitlements, LoadCompanyBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadEntitlements, LoadCompanyBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
