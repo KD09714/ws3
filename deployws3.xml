@@ -15,7 +15,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.22-->
+<!-- rev=2.23-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -31,6 +31,7 @@
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
 	</tstamp>
 	<echo message="Timestamp : ${TimeStamp}"/>
+	<property name="CMPJarRename" value="${CMPJar}" />
 
 	<target name="StopProspero" if="ProsperoTomcat">
 		<exec executable="sc.exe" failonerror="true">
@@ -360,6 +361,7 @@
 	</target>
 	
 	<target name="LoadCompanyBundle">
+		<move file="${JarSourcePath}/${CMPJar}" tofile="${JarSourcePath}/${CMPJarRename}" />
 		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
 			<arg value="/c"/>
 			<arg value="LoadCompanyBundleClient.bat"/>
