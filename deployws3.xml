@@ -15,7 +15,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.23-->
+<!-- rev=2.24-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -339,11 +339,12 @@
 		<move todir="${BackupDir}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
 			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
 		</move>
+		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" />
 	</target>
 
 	<target name="WS3Deploy">
 		<echo message="Comparing timestamp of war." />
-		<uptodate targetfile="${WarDestPath}/${WSWar}" srcfile="${WarSourcePath}/${WSWar}" property="WarUpToDate"/>
+		<uptodate targetfile="${WarDestPath}/${WSWar}.deployed" srcfile="${WarSourcePath}/${WSWar}" property="WarUpToDate"/>
 	
 		<if>
 		<equals arg1="${WarUpToDate}" arg2="true"/>
