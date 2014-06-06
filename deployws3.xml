@@ -15,7 +15,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.25-->
+<!-- rev=2.26-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -379,7 +379,7 @@
 	</target>
 
 	<target name="CompareAndLoadJob" if="autoloadjobs">
-		<basename property="customdir" file="${CMPJar}" suffix=".jar"/>
+		<basename property="customdir" file="${CMPJarRename}" suffix=".jar"/>
 		
 		<waitfor maxwait="300" maxwaitunit="second">
 		        <available file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml"/>
