@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 06/08/2014     Dharmendra Kumar  Added Upgrade target -->
 <!-- 06/02/2014     Dharmendra Kumar  Accomodating loadcompanybundle and loading jobs. -->
 <!-- 05/30/2014     Dharmendra Kumar  Fixed the sql revision finding sequence.   -->
 <!-- 08/21/2012     Dharmendra        Adding code to handle corda updates. -->
@@ -15,7 +16,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.26-->
+<!-- rev=2.27-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -228,7 +229,6 @@
 
 	<target name="CopyExtractLatestWar">
 		<copy file="${WarSourcePath}/${WSWar}" todir="${WarDestPath}" preservelastmodified="true"/>
-		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
 		<unwar src="${WarDestPath}/${WSWar}" dest="${DeployBase}/${DeployDir}"/>
 	</target>
 	
@@ -371,6 +371,7 @@
 	</target>
 	
 	<target name="LoadCompanyBundle">
+		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
 		<move file="${JarSourcePath}/${CMPJar}" tofile="${JarSourcePath}/${CMPJarRename}" />
 		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
 			<arg value="/c"/>
@@ -428,6 +429,13 @@
 	</target>
 	
 	<target name="RunOneTimesql">
-		<!--antcall target="RunAsql" /-->
+		<for list="${onetimesql}" param="onetimesql">
+		<sequential>
+			<ant target="RunAsql" inheritAll="false" antfile="tools/runasql.xml" dir="${basedir}">
+				<property name="ws.database.file.name" value="@{onetimesql}" />
+				<property name="ws.database.file.path" value="sql" />
+			</ant>
+		</sequential>
+		</for>
 	</target>
 </project>
