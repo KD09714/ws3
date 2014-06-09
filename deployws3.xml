@@ -16,7 +16,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.27-->
+<!-- rev=2.28-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -437,5 +437,14 @@
 			</ant>
 		</sequential>
 		</for>
+	</target>
+	
+	<target name="clearwinlogs">
+		<exec executable="cmd.exe" failonerror="true" >
+			<arg value="wmic nteventlog where filename=&quot;html2Pdf&quot; cleareventlog" />
+		</exec>
+		<exec executable="cmd.exe" failonerror="true">
+			<arg value="/c iisreset" />
+		</exec>
 	</target>
 </project>
