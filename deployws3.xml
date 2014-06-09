@@ -372,7 +372,7 @@
 	
 	<target name="LoadCompanyBundle">
 		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
-		<move file="${JarSourcePath}/${CMPJar}" tofile="${JarSourcePath}/${CMPJarRename}" />
+		<move file="${WarDestPath}/${CMPJar}" tofile="${WarDestPath}/${CMPJarRename}" />
 		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
 			<arg value="/c"/>
 			<arg value="LoadCompanyBundleClient.bat"/>
