@@ -1,0 +1,71 @@
+<project name="runasql" default="MachineInfo" basedir="..">
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	<dirname property="project.webinf.dir" file="${env.SERVLET_API_PATH}"/>
+	<dirname property="project.basedir" file="${project.webinf.dir}"/>
+	<if>
+	<available file="cfg/env-variable.cfg" />
+	<then>
+		<var file="cfg/env-variable.cfg" />
+	</then>
+	</if>
+	<property file="cfg/runasql.cfg" />
+	<property environment="env"/>
+	
+	<!-- Loader specific jars classpath targets due to conflicting jars with Wealthstation. -->
+	<path id="run.classpath">
+		<pathelement path="classes"/>
+		<fileset dir="${env.SERVLET_API_PATH}/lib" includes="*.jar"/>
+	</path>
+
+	<target name="print.run.classpath">
+		<property name="cp" refid="run.classpath"/>
+		<echo message="${cp}"/>
+	</target>
+	
+	<!-- Wealthstation jars classpath targets. -->
+	<path id="ws.run.classpath">
+		<pathelement path=".."/>
+		<pathelement path="classes"/>
+		<fileset dir="lib" includes="*.jar"/>
+		<pathelement path="${env.DEPLOY_PATH}"/>
+	</path>			
+	
+	<target name="ws.print.run.classpath">
+		<property name="cp" refid="ws.run.classpath"/>
+		<echo message="${cp}"/>
+	</target>	
+	
+	<target name="checkWs3LoaderPropsPathDefined">
+		<condition property="ws3LoaderPropsPathIsDefined">
+			<isset property="env.WS3_LOADER_PROPS_PATH"/>
+		</condition>
+	</target>	
+	
+	<target name="listEnvironmentVariables">
+		<echoproperties/>
+		<pathconvert property="classpathProp" refid="ws.run.classpath"/>
+		
+		<echo>Classpath is ${classpathProp}</echo>		
+		<echo message="WS3_LOADER_PROPS_PATH is ${env.WS3_LOADER_PROPS_PATH}"/>
+	</target>	
+	
+	<target name="checkWs3LoaderPropsPathNotDefined" unless="ws3LoaderPropsPathIsDefined">		
+		<echo level="error" message="Error: Environment variable WS3_LOADER_PROPS_PATH is not defined"/>
+	</target>
+
+	<target name="loadLoaderProperties" depends="checkWs3LoaderPropsPathDefined,checkWs3LoaderPropsPathNotDefined" if="ws3LoaderPropsPathIsDefined">		
+		<property file="${env.WS3_LOADER_PROPS_PATH}"/>
+	</target>	
+	
+	<!-- Update the database -->
+	<target name="executesql" depends="loadLoaderProperties">
+		<sql print="TRUE" autocommit="false" delimiter="GO" driver="${ws.database.driver}" onerror="abort" password="${ws.database.password}" src="${ws.database.file.path}\\${ws.database.file.name}" url="${ws.database.url}" userid="${ws.database.user}">
+			<classpath refid="run.classpath"/>
+		</sql>
+	</target>
+	
+	<target name="RunAsql">
+		<input message="Enter the sql file nmae to execute:" addproperty="ws.database.file.name" />
+		<antcall target="executesql" />
+	</target>
+</project>
