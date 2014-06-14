@@ -16,7 +16,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.28-->
+<!-- rev=2.29-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -339,7 +339,7 @@
 		<move todir="${BackupDir}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
 			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
 		</move>
-		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" />
+		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" preservelastmodified="true"/>
 	</target>
 
 	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, UpdateCorda, StartEnv">
@@ -349,6 +349,7 @@
 		<move todir="${BackupDir}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
 			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
 		</move>
+		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" preservelastmodified="true"/>
 	</target>
 
 	<target name="WS3Deploy">
@@ -372,11 +373,12 @@
 	
 	<target name="LoadCompanyBundle">
 		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
-		<move file="${WarDestPath}/${CMPJar}" tofile="${WarDestPath}/${CMPJarRename}" />
+		<move file="${WarDestPath}/${CMPJar}" tofile="${WarDestPath}/${CMPJarRename}" preservelastmodified="true"/>
 		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
 			<arg value="/c"/>
 			<arg value="LoadCompanyBundleClient.bat"/>
 		</exec>
+		<move file="${WarDestPath}/${CMPJarRename}" tofile="${WarDestPath}/${CMPJarRename}.deployed" preservelastmodified="true" />
 	</target>
 
 	<target name="CompareAndLoadJob" if="autoloadjobs">
@@ -425,7 +427,7 @@
 		<move todir="${BackupDir}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
 			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
 		</move>
-		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" />
+		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" preservelastmodified="true" />
 	</target>
 	
 	<target name="RunOneTimesql">
