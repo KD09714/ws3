@@ -16,7 +16,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.29-->
+<!-- rev=2.30-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -332,7 +332,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadEntitlements, LoadCompanyBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadEntitlements, CompareAndLoadBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -369,6 +369,19 @@
 	
 	<target name="RestartEnv" depends="StopEnv, StartEnv">
 		<echo message="Tomcat restart completed."/>
+	</target>
+	
+	<target name="CompareAndLoadBundle">
+		<echo message="Comparing timestamp of Company Bundle." />
+		<uptodate targetfile="${WarDestPath}/${CMPJarRename}.deployed" srcfile="${WarSourcePath}/${CMPJar}" property="BundleWarUpToDate"/>
+		<if>
+		<equals arg1="${BundleWarUpToDate}" arg2="true"/>
+		<then>
+			<echo message="Company Bundle is Up-To-Date, Skipping load of Bundle." />
+		</then>
+		<else>
+			<antcall target="LoadCompanyBundle" />
+		</else>
 	</target>
 	
 	<target name="LoadCompanyBundle">
