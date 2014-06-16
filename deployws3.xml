@@ -382,6 +382,7 @@
 		<else>
 			<antcall target="LoadCompanyBundle" />
 		</else>
+		</if>
 	</target>
 	
 	<target name="LoadCompanyBundle">
