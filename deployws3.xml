@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 06/17/2014     Dharemndra Kumar  Accomodate execution of loadjobs for all the customers -->
 <!-- 06/08/2014     Dharmendra Kumar  Added Upgrade target -->
 <!-- 06/02/2014     Dharmendra Kumar  Accomodating loadcompanybundle and loading jobs. -->
 <!-- 05/30/2014     Dharmendra Kumar  Fixed the sql revision finding sequence.   -->
@@ -16,7 +17,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.30-->
+<!-- rev=2.31-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -422,10 +423,14 @@
 		</if>
 	</target>
 	
-	<target name="LoadJobs" if="autoloadjobs">
+	<target name="LoadJobs">
 		<basename property="customdir" file="${CMPJar}" suffix=".jar"/>
 		<echo message="Loading Jobs." />
 		<copy file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs" preservelastmodified="true" overwrite="true"/>
+		<replace file="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" preserveLastModified="true">
+			<replacefilter token="&lt;Job_ID_for_AFS_BALANCE_JOB&gt;" value="${Job_ID_for_AFS_BALANCE_JOB}" />
+			<replacefilter token="&lt;Job_ID_for_AFS_POSITIONS_JOB&gt;" value="${Job_ID_for_AFS_POSITIONS_JOB}" />
+		</replace>
 		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="doDeleteAndReloadAllJobs" />
 	</target>
 	
