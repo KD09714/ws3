@@ -396,7 +396,7 @@
 		<move file="${WarDestPath}/${CMPJarRename}" tofile="${WarDestPath}/${CMPJarRename}.deployed" preservelastmodified="true" />
 	</target>
 
-	<target name="CompareAndLoadJob" if="autoloadjobs">
+	<target name="CompareAndLoadJob">
 		<basename property="customdir" file="${CMPJarRename}" suffix=".jar"/>
 		
 		<waitfor maxwait="300" maxwaitunit="second">
