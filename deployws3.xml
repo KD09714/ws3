@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 06/25/2014     Dharmendra Kumar  Force Execute the sql file in next deployment if it failed execution once -->
 <!-- 06/17/2014     Dharemndra Kumar  Accomodate execution of loadjobs for all the customers -->
 <!-- 06/08/2014     Dharmendra Kumar  Added Upgrade target -->
 <!-- 06/02/2014     Dharmendra Kumar  Accomodating loadcompanybundle and loading jobs. -->
@@ -17,11 +18,12 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.31-->
+<!-- rev=2.32-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
 	<property file="cfg/deployws3.cfg"/>
+	<property file="cfg/deployws3-2.cfg" />
 	<if>
 	<available file="cfg/env-variable.cfg" />
 	<then>
@@ -281,6 +283,7 @@
 	</target>
 	
 	<target name="ExecuteWS3sql">
+		<echo message="executesql=true" file="cfg/deployws3-2.cfg" force="true" />
 		<if>
 		<equals arg1="${executesql}" arg2="true" />
 			<then>
@@ -291,6 +294,7 @@
 				<echo message="Database is UP-To-Date, Skipping ${ws3sql} execution." />
 			</else>
 		</if>
+		<delete file="cfg/deployws3-2.cfg" />
 	</target>
 	
 	<target name="LoadEntitlements">
