@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 06/27/2014     Dharmendra Kumar  Updating target dependency for Upgrade target -->
 <!-- 06/25/2014     Dharmendra Kumar  Force Execute the sql file in next deployment if it failed execution once -->
 <!-- 06/17/2014     Dharemndra Kumar  Accomodate execution of loadjobs for all the customers -->
 <!-- 06/08/2014     Dharmendra Kumar  Added Upgrade target -->
@@ -18,7 +19,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=2.33-->
+<!-- rev=3.00-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -443,7 +444,7 @@
 			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="insertMasterData" />
 	</target>
 	
-	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, LoadCompanyBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
+	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, StartEnv, LoadCompanyBundle, StopEnv, StartEnv, CompareAndLoadJob">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
