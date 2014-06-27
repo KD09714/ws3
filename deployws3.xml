@@ -444,7 +444,7 @@
 			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="insertMasterData" />
 	</target>
 	
-	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, StartEnv, LoadCompanyBundle, StopEnv, StartEnv, CompareAndLoadJob">
+	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -452,6 +452,9 @@
 			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
 		</move>
 		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" preservelastmodified="true" />
+		<antcall target="LoadCompanyBundle" />
+		<antcall target="RestartEnv" />
+		<antcall target="CompareAndLoadJob" />
 	</target>
 	
 	<target name="RunOneTimesql">
