@@ -1,0 +1,25 @@
+<project name="PurgeBackup" default="PurgeZip" basedir="..">	
+	<property file="cfg/deployws3.cfg"/>	
+	<taskdef name="purge" classname="com.dallaway.ant.Purge"/>
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+<target name="ZipBackup">
+	<for param="file">
+		<path>
+			<dirset dir="${BackupDir}" includes="${DeployDir}*" excludes="*.zip"/>
+		</path>
+		<sequential>
+			<echo> Compressing @{file} </echo>
+			<delete file="@{file}.zip"/>
+			<zip destfile="@{file}.zip" basedir="@{file}"/>
+			<delete dir="@{file}"/>
+		</sequential>
+	</for>
+</target>
+
+<target name="PurgeZip" depends="ZipBackup" if="KeepBackupCount">
+	<purge keep="${KeepBackupCount}">
+		<fileset dir="${BackupDir}" includes="${DeployDir}*.zip"/>
+	</purge>
+</target>
+</project>
