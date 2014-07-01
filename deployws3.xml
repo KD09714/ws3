@@ -19,7 +19,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=3.00-->
+<!-- rev=3.01-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -338,7 +338,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadEntitlements, CompareAndLoadBundle, UpdateCorda, StartEnv, CompareAndLoadJob">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadEntitlements, UpdateCorda, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -346,6 +346,11 @@
 			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
 		</move>
 		<move file="${WarDestPath}/${WSWar}" tofile="${WarDestPath}/${WSWar}.deployed" preservelastmodified="true"/>
+		
+		<sleep minutes="2"/>
+		<antcall target="CompareAndLoadBundle" />
+		<antcall target="RestartEnv" />
+		<antcall target="CompareAndLoadJob" />
 	</target>
 
 	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, UpdateCorda, StartEnv">
@@ -464,6 +469,7 @@
 				<property name="ws.database.file.name" value="@{onetimesql}" />
 				<property name="ws.database.file.path" value="sql" />
 			</ant>
+			<move file="sql/@{onetimesql}" tofile="sql/@{onetimesql}.deployed" />
 		</sequential>
 		</for>
 	</target>
