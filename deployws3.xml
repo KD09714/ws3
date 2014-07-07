@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 07/07/2014     Dharmendra Kumar  Adding sql execution in war deployment target -->
 <!-- 06/27/2014     Dharmendra Kumar  Updating target dependency for Upgrade target -->
 <!-- 06/25/2014     Dharmendra Kumar  Force Execute the sql file in next deployment if it failed execution once -->
 <!-- 06/17/2014     Dharemndra Kumar  Accomodate execution of loadjobs for all the customers -->
@@ -19,7 +20,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=3.01-->
+<!-- rev=3.02-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -338,7 +339,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadEntitlements, UpdateCorda, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, RunOneTimesql, LoadEntitlements, UpdateCorda, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -465,11 +466,19 @@
 	<target name="RunOneTimesql">
 		<for list="${onetimesql}" param="onetimesql">
 		<sequential>
-			<ant target="RunAsql" inheritAll="false" antfile="tools/runasql.xml" dir="${basedir}">
-				<property name="ws.database.file.name" value="@{onetimesql}" />
-				<property name="ws.database.file.path" value="sql" />
-			</ant>
-			<move file="sql/@{onetimesql}" tofile="sql/@{onetimesql}.deployed" />
+			<if>
+			<available file="sql/@{onetimesql}" />
+			<then>
+				<ant target="RunAsql" inheritAll="false" antfile="tools/runasql.xml" dir="${basedir}">
+					<property name="ws.database.file.name" value="@{onetimesql}" />
+					<property name="ws.database.file.path" value="sql" />
+				</ant>
+				<move file="sql/@{onetimesql}" tofile="sql/@{onetimesql}.deployed" />
+			</then>
+			<else>
+				<echo message="sql/@{onetimesql} does not exists, skipping execution." />
+			</else>
+			</if>
 		</sequential>
 		</for>
 	</target>
