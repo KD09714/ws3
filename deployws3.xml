@@ -464,6 +464,11 @@
 	</target>
 	
 	<target name="RunOneTimesql">
+		<copy todir="sql" preservelastmodified="true">
+			<fileset dir="${WarSourcePath}" >
+				<include name="*.sql" />
+			</fileset>
+		</copy>
 		<for list="${onetimesql}" param="onetimesql">
 		<sequential>
 			<if>
