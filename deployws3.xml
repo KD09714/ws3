@@ -20,7 +20,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=3.03-->
+<!-- rev=3.04-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -37,7 +37,6 @@
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
 	</tstamp>
 	<echo message="Timestamp : ${TimeStamp}"/>
-	<property name="CMPJarRename" value="${CMPJar}" />
 
 	<target name="StopProspero" if="ProsperoTomcat">
 		<exec executable="sc.exe" failonerror="true">
@@ -384,7 +383,7 @@
 	
 	<target name="CompareAndLoadBundle">
 		<echo message="Comparing timestamp of Company Bundle." />
-		<uptodate targetfile="${WarDestPath}/${CMPJarRename}.deployed" srcfile="${WarSourcePath}/${CMPJar}" property="BundleWarUpToDate"/>
+		<uptodate targetfile="${WarDestPath}/${CMPJar}.deployed" srcfile="${WarSourcePath}/${CMPJar}" property="BundleWarUpToDate"/>
 		<if>
 		<equals arg1="${BundleWarUpToDate}" arg2="true"/>
 		<then>
@@ -399,16 +398,15 @@
 	
 	<target name="LoadCompanyBundle">
 		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
-		<move file="${WarDestPath}/${CMPJar}" tofile="${WarDestPath}/${CMPJarRename}" preservelastmodified="true"/>
 		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
 			<arg value="/c"/>
 			<arg value="LoadCompanyBundleClient.bat"/>
 		</exec>
-		<move file="${WarDestPath}/${CMPJarRename}" tofile="${WarDestPath}/${CMPJarRename}.deployed" preservelastmodified="true" />
+		<move file="${WarDestPath}/${CMPJar}" tofile="${WarDestPath}/${CMPJar}.deployed" preservelastmodified="true" />
 	</target>
 
 	<target name="CompareAndLoadJob">
-		<basename property="customdir" file="${CMPJarRename}" suffix=".jar"/>
+		<basename property="customdir" value="${ws.firmname}"/>
 		
 		<waitfor maxwait="300" maxwaitunit="second">
 		        <available file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml"/>
