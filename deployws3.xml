@@ -406,7 +406,7 @@
 	</target>
 
 	<target name="CompareAndLoadJob">
-		<basename property="customdir" value="${ws.firmname}"/>
+		<property name="customdir" value="${ws.firmname}"/>
 		
 		<waitfor maxwait="300" maxwaitunit="second">
 		        <available file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml"/>
@@ -433,7 +433,7 @@
 	</target>
 	
 	<target name="LoadJobs">
-		<basename property="customdir" file="${CMPJar}" suffix=".jar"/>
+		<property name="customdir" value="${ws.firmname}"/>
 		<echo message="Loading Jobs." />
 		<copy file="${DeployBase}/${DeployDir}/custom/${customdir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs" preservelastmodified="true" overwrite="true"/>
 		<replace file="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" preserveLastModified="true">
