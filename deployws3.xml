@@ -266,7 +266,7 @@
 		<if>
 		<equals arg1="${BundleWarUpToDate}" arg2="true"/>
 		<then>
-			<delte file="${WarSourcePath}/${CMPJar}" />
+			<delete file="${WarSourcePath}/${CMPJar}" />
 			<echo message="Company Bundle is Up-To-Date, Skipping load of Bundle." />
 		</then>
 		<else>
