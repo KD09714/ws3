@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 08/01/2014     Dharemndra Kumar  Putting Standards -->
 <!-- 07/07/2014     Dharmendra Kumar  Adding sql execution in war deployment target -->
 <!-- 06/27/2014     Dharmendra Kumar  Updating target dependency for Upgrade target -->
 <!-- 06/25/2014     Dharmendra Kumar  Force Execute the sql file in next deployment if it failed execution once -->
@@ -20,7 +21,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=3.04-->
+<!-- rev=4.00-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -38,17 +39,21 @@
 	</tstamp>
 	<echo message="Timestamp : ${TimeStamp}"/>
 
-	<target name="StopProspero" if="ProsperoTomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${ProsperoTomcat}"/>
-			<arg line="start= disabled"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="stop"/>
-			<arg value="${ProsperoTomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
+	<target name="StopServices">
+		<for list="${stopservicenames}" param="servicename">
+		<sequential>
+			<exec executable="sc.exe" failonerror="true">
+				<arg value="config"/>
+				<arg value="@{servicename}"/>
+				<arg line="start= disabled"/>
+			</exec>
+			<exec executable="sc.exe" failonerror="true">
+				<arg value="stop"/>
+				<arg value="@{servicename}"/>
+			</exec>
+			<sleep seconds="10"/>	
+		</sequential>
+		</for>
 	</target>
 	
 	<target name="KillPipeman" if="KillProcess">
@@ -59,154 +64,28 @@
 		</exec>
 	</target>
 	
-	<target name="StopWS3" if="WS3Tomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${WS3Tomcat}"/>
-			<arg line="start= disabled"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="stop"/>
-			<arg value="${WS3Tomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>	
-	
-	<target name="StopPosting" if="PostingTomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${PostingTomcat}"/>
-			<arg line="start= disabled"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="stop"/>
-			<arg value="${PostingTomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>	
-	
-	<target name="StopAFS" if="AFSTomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${AFSTomcat}"/>
-			<arg line="start= disabled"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="stop"/>
-			<arg value="${AFSTomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>	
-			
-	<target name="StopCSA" if="CSATomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${CSATomcat}"/>
-			<arg line="start= disabled"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="stop"/>
-			<arg value="${CSATomcat}"/>
-		</exec>
-			<sleep seconds="10"/>
-	</target>
-	
-	<target name="StopCorda" if="CordaService">
-		<exec executable="sc.exe" failonerror="false">
-			<arg value="config"/>
-			<arg value="${CordaService}"/>
-			<arg line="start= disabled"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="false">
-			<arg value="stop"/>
-			<arg value="${CordaService}"/>
-		</exec>
-			<sleep seconds="10"/>
-	</target>
-	
-	<target name="StopEnv" depends="StopProspero, KillPipeman, StopWS3, StopPosting, StopAFS, StopCSA">
+	<target name="StopEnv" depends="KillPipeman, StopServices">
 		<echo message="Stopping Tomcat Complete.."/>
 	</target>
 	
-	<target name="StartCSA" if="CSATomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${CSATomcat}"/>
-			<arg line="start= auto"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="start"/>
-			<arg value="${CSATomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>	
-	
-	<target name="StartAFS" if="AFSTomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${AFSTomcat}"/>
-			<arg line="start= auto"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="start"/>
-			<arg value="${AFSTomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>
-
-	<target name="StartPosting" if="PostingTomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${PostingTomcat}"/>
-			<arg line="start= auto"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="start"/>
-			<arg value="${PostingTomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
+	<target name="StartServices">
+		<for list="${startservicenames}" param="st-servicename">
+		<sequential>
+			<exec executable="sc.exe" failonerror="true">
+				<arg value="config"/>
+				<arg value="@{st-servicename}"/>
+				<arg line="start= auto"/>
+			</exec>
+			<exec executable="sc.exe" failonerror="true">
+				<arg value="start"/>
+				<arg value="@{st-servicename}"/>
+			</exec>
+			<sleep seconds="10"/>	
+		</sequential>
+		</for>
 	</target>
 	
-	<target name="StartWS3" if="WS3Tomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${WS3Tomcat}"/>
-			<arg line="start= auto"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="start"/>
-			<arg value="${WS3Tomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>
-
-	<target name="StartProspero" if="ProsperoTomcat">
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="config"/>
-			<arg value="${ProsperoTomcat}"/>
-			<arg line="start= auto"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="true">
-			<arg value="start"/>
-			<arg value="${ProsperoTomcat}"/>
-		</exec>
-		<sleep seconds="10"/>
-	</target>
-	
-	<target name="StartCorda" if="CordaService">
-		<exec executable="sc.exe" failonerror="false">
-			<arg value="config"/>
-			<arg value="${CordaService}"/>
-			<arg line="start= auto"/>
-		</exec>
-		<exec executable="sc.exe" failonerror="false">
-			<arg value="start"/>
-			<arg value="${CordaService}"/>
-		</exec>
-			<sleep seconds="10"/>
-	</target>
-	
-	<target name="StartEnv" depends="StartCSA, StartAFS, StartPosting, StartWS3, StartProspero">
+	<target name="StartEnv" depends="StartServices">
 		<echo message="Starting Tomcat Complete.."/>
 	</target>
 	
@@ -232,7 +111,7 @@
 
 
 	<target name="CopyExtractLatestWar">
-		<copy file="${WarSourcePath}/${WSWar}" todir="${WarDestPath}" preservelastmodified="true"/>
+		<move file="${WarSourcePath}/${WSWar}" todir="${WarDestPath}" preservelastmodified="true"/>
 		<unwar src="${WarDestPath}/${WSWar}" dest="${DeployBase}/${DeployDir}"/>
 	</target>
 	
@@ -387,6 +266,7 @@
 		<if>
 		<equals arg1="${BundleWarUpToDate}" arg2="true"/>
 		<then>
+			<delte file="${WarSourcePath}/${CMPJar}" />
 			<echo message="Company Bundle is Up-To-Date, Skipping load of Bundle." />
 		</then>
 		<else>
@@ -397,7 +277,7 @@
 	</target>
 	
 	<target name="LoadCompanyBundle">
-		<copy file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
+		<move file="${JarSourcePath}/${CMPJar}" todir="${WarDestPath}" preservelastmodified="true"/>
 		<exec executable="cmd.exe" dir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs" failonerror="true">
 			<arg value="/c"/>
 			<arg value="LoadCompanyBundleClient.bat"/>
@@ -462,11 +342,11 @@
 	</target>
 	
 	<target name="RunOneTimesql">
-		<copy todir="sql" preservelastmodified="true">
+		<move todir="sql" preservelastmodified="true">
 			<fileset dir="${WarSourcePath}" >
 				<include name="*.sql" />
 			</fileset>
-		</copy>
+		</move>
 		<for list="${onetimesql}" param="onetimesql">
 		<sequential>
 			<if>
@@ -484,14 +364,10 @@
 			</if>
 		</sequential>
 		</for>
-	</target>
-	
-	<target name="clearwinlogs">
-		<exec executable="cmd.exe" failonerror="true" >
-			<arg value="wmic nteventlog where filename=&quot;html2Pdf&quot; cleareventlog" />
-		</exec>
-		<exec executable="cmd.exe" failonerror="true">
-			<arg value="/c iisreset" />
-		</exec>
+		<delete>
+			<fileset dir="${WarSourcePath}" >
+				<include name="*.sql" />
+			</fileset>
+		</delete>
 	</target>
 </project>
