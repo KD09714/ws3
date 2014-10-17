@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 10/17/2014     Dharmendra Kumar  Clearing work & temp folder of ws3 after new war update -->
 <!-- 10/13/2014     Dharmendra Kumar  remove corda service start/ stop -->
 <!-- 08/01/2014     Dharemndra Kumar  Putting Standards -->
 <!-- 07/07/2014     Dharmendra Kumar  Adding sql execution in war deployment target -->
@@ -22,7 +23,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=4.02-->
+<!-- rev=4.03-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -217,7 +218,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, RunOneTimesql, LoadEntitlements, UpdateCorda, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -231,7 +232,7 @@
 		<antcall target="CompareAndLoadJob" />
 	</target>
 
-	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, UpdateCorda, StartEnv">
+	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -328,7 +329,7 @@
 			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="insertMasterData" />
 	</target>
 	
-	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, StartEnv">
+	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -369,5 +370,17 @@
 				<include name="*.sql" />
 			</fileset>
 		</delete>
+	</target>
+	
+	<target name="CleanTempDir">
+		<for list="${dir-to-cleanup}" param = "tempdir">
+		<sequential>
+			<echo message="Cleaning up ${ws3tomcathome}/@{tempdir} directory." />
+			<mkdir dir="${ws3tomcathome}/@{tempdir}" />
+			<delete includeemptydirs="true">
+				<fileset dir="${ws3tomcathome}/@{tempdir}" />
+			</delete>
+		</sequential>
+		</for>
 	</target>
 </project>
