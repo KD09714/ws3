@@ -83,7 +83,7 @@
 				<arg value="start"/>
 				<arg value="@{st-servicename}"/>
 			</exec>
-			<sleep seconds="10"/>	
+			<sleep seconds="${sleepsec}"/>	
 		</sequential>
 		</for>
 	</target>
