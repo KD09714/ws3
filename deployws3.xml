@@ -23,7 +23,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=4.03-->
+<!-- rev=4.04-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -378,7 +378,9 @@
 			<echo message="Cleaning up ${ws3tomcathome}/@{tempdir} directory." />
 			<mkdir dir="${ws3tomcathome}/@{tempdir}" />
 			<delete includeemptydirs="true">
-				<fileset dir="${ws3tomcathome}/@{tempdir}" />
+				<fileset dir="${ws3tomcathome}/@{tempdir}">
+					<include name="**/*" />
+				</fileset>
 			</delete>
 		</sequential>
 		</for>
