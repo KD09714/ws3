@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 11/10/2014     Dharmendra Kumar  Added Compareandloadmasterdata target                   -->
 <!-- 11/06/2014     Dharmendra Kumar  Added generation of Authorization Documentation         -->
 <!-- 10/17/2014     Dharmendra Kumar  Clearing work & temp folder of ws3 after new war update -->
 <!-- 10/13/2014     Dharmendra Kumar  remove corda service start/ stop -->
@@ -24,7 +25,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.00-->
+<!-- rev=5.01-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -222,7 +223,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -328,12 +329,62 @@
 		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="doDeleteAndReloadAllJobs" />
 	</target>
 	
-	<target name="LoadMasterData">
-		<echo message="Loading Master Data." />
-			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="insertMasterData" />
+	<target name="CompareAndLoadMasterData">
+		<for list="${mastersql}" param="mstrsqlname">
+		<sequential>
+			<var name="deployedmstrrev" unset="true"/>
+			<var name="newmstrrev" unset="true"/>
+			<var name="mstrrevision" unset="true"/>
+			<var name="mstrrevision1" unset="true"/>
+			<var name="mstrsqlfilename" unset="true"/>
+			<basename file="${DeployBase}/${DeployDir}/WEB-INF/sql/@{mstrsqlname}" property="mstrsqlfilename" />
+			<echo message="Processing ${DeployBase}/${DeployDir}/WEB-INF/sql/@{mstrsqlname}" />
+			<loadfile srcfile="${DeployBase}/${DeployDir}-${TimeStamp}/WEB-INF/sql/@{mstrsqlname}" property="mstrrevision" failonerror="false">
+				<filterchain>
+					<linecontains>
+						<contains value="${mstrsqlfilename}"/>
+					</linecontains>
+				</filterchain>
+			</loadfile>
+			<grep in="${mstrrevision}" regex="('[0-9]+')" property="deployedmstrrev"/>
+			<echo message="Deployed Revision : ${deployedmstrrev}" />
+			<loadfile srcfile="${DeployBase}/${DeployDir}/WEB-INF/sql/@{mstrsqlname}" property="mstrrevision1" failonerror="false">
+				<filterchain>
+					<linecontains>
+						<contains value="${mstrsqlfilename}"/>
+					</linecontains>
+				</filterchain>	
+			</loadfile>
+			<grep in="${mstrrevision1}" regex="('[0-9]+')" property="newmstrrev"/>
+			<echo message="Current Revision : ${newmstrrev}" />
+			
+			<if>
+			<equals arg1="${deployedmstrrev}" arg2="${newmstrrev}" />
+			<else>
+				<echo message="Change detected in ${DeployBase}/${DeployDir}/WEB-INF/sql/@{mstrsqlname}" />
+				<property name="executemstrsql" value="true" />
+			</else>
+			</if>
+		</sequential>
+		</for>
 	</target>
 	
-	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="LoadMasterData">
+		<echo message="executemstrsql=true" file="cfg/deployws3-3.cfg" />
+		<if>
+		<equals arg1="${executemstrsql}" arg2="true" />
+			<then>
+				<echo message="Loading Master Data." />
+				<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="insertMasterData" />
+			</then>
+			<else>
+				<echo message="Database is UP-To-Date, Skipping Load of Master Data." />
+			</else>
+		</if>
+		<delete file="cfg/deployws3-3.cfg" />
+	</target>
+	
+	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
