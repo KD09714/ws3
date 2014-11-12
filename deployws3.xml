@@ -25,7 +25,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.01-->
+<!-- rev=5.02-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -193,11 +193,13 @@
 			<echo message="Loading Entitlements..." />
 			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="loadAuthorizations" />
 			<copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/firm-setup.xml" todir="${CSADeployDir}/WEB-INF/config/firmcreation" preservelastmodified="true" overwrite="true"/>
-			
-			<echo message="Generating Authorization Documentation..." />
-			<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="generateAuthorizationsDoc" />
 		</else>
 		</if>
+	</target>
+	
+	<target name="GenerateAuthDoc" >
+		<echo message="Generating Authorization Documentation..." />
+		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="generateAuthorizationsDoc" />
 	</target>
 	
 	<target name="UpdateCorda">
@@ -223,7 +225,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -237,7 +239,7 @@
 		<antcall target="CompareAndLoadJob" />
 	</target>
 
-	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -384,7 +386,7 @@
 		<delete file="cfg/deployws3-3.cfg" />
 	</target>
 	
-	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="Upgrade" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
