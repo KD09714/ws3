@@ -25,7 +25,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.02-->
+<!-- rev=5.03-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -202,6 +202,32 @@
 		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="generateAuthorizationsDoc" />
 	</target>
 	
+	<target name="StopCorda">
+		<exec executable="sc.exe" failonerror="false">
+			<arg value="config"/>
+			<arg value="@{cordaservicename}"/>
+			<arg line="start= disabled"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="stop"/>
+			<arg value="@{cordaservicename}"/>
+		</exec>
+		<sleep seconds="${sleepsec}"/>
+	</target>
+	
+	<target name="StartCorda">
+		<exec executable="sc.exe" failonerror="false">
+			<arg value="config"/>
+			<arg value="@{cordaservicename}"/>
+			<arg line="start= auto"/>
+		</exec>
+		<exec executable="sc.exe" failonerror="true">
+			<arg value="start"/>
+			<arg value="@{cordaservicename}"/>
+		</exec>
+		<sleep seconds="${sleepsec}"/>
+	</target>
+	
 	<target name="UpdateCorda">
 		<uptodate targetfile="${DeployBase}/${DeployDir}-${TimeStamp}/externalPkgs/cordaChartDefinitions/${CordaType}.zip" srcfile="${DeployBase}/${DeployDir}/externalPkgs/cordaChartDefinitions/${CordaType}.zip" property="CordaUpToDate"/>
 		<if>
@@ -210,6 +236,7 @@
 			<echo message="Corda is Up-To-Date, Skipping Corda Update." />
 		</then>
 		<else>
+			<antcall target="StopCorda" />
 			<echo message="Updating Corda." />
 			<copy todir="${CordaDestPath}" preservelastmodified="true" overwrite="true">
 				<fileset dir="${DeployBase}/${DeployDir}/planning/chartdef" />
@@ -221,6 +248,7 @@
 			<move todir="${BackupDir}/${CordaType}-${TimeStamp}" preservelastmodified="true" failonerror="false">
 				<fileset dir="${CordaDestPath}/wealthStation/${CordaType}-${TimeStamp}"/>
 			</move>
+			<antcall target="StartCorda" />
 		</else>
 		</if>
 	</target>
