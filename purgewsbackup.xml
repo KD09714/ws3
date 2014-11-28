@@ -2,7 +2,12 @@
 	<property file="cfg/deployws3.cfg"/>	
 	<taskdef name="purge" classname="com.dallaway.ant.Purge"/>
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
-
+	
+	<tstamp>
+		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
+	</tstamp>
+	<echo message="Timestamp : ${TimeStamp}"/>
+	
 <target name="ZipBackup">
 	<for param="file">
 		<path>
@@ -15,6 +20,15 @@
 			<delete dir="@{file}"/>
 		</sequential>
 	</for>
+</target>
+
+<target name="BackupProp">
+	<copy todir="${BackupDir}/properties-${TimeStamp}" preservelastmodified="true">
+		<fileset dir="${proppath}" >
+			<include name="*" />
+		</fileset>
+	</copy>
+	<copy file="${ws3tomcathome}/bin/config.properties" todir="${BackupDir}/properties-${TimeStamp}" preservelastmodified="true" />
 </target>
 
 <target name="PurgeZip" depends="ZipBackup" if="KeepBackupCount">
