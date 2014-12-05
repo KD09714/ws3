@@ -25,13 +25,15 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.03-->
+<!-- rev=5.04-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
 	<property file="cfg/deployws3.cfg"/>
 	<property file="cfg/deployws3-2.cfg" />
 	<property name="sleepsec" value="10" />
+	<property name="failonerror" value="false" />
+	
 	<if>
 	<available file="cfg/env-variable.cfg" />
 	<then>
@@ -47,12 +49,12 @@
 	<target name="StopServices">
 		<for list="${stopservicenames}" param="servicename">
 		<sequential>
-			<exec executable="sc.exe" failonerror="true">
+			<exec executable="sc.exe" failonerror="${failonerror}">
 				<arg value="config"/>
 				<arg value="@{servicename}"/>
 				<arg line="start= disabled"/>
 			</exec>
-			<exec executable="sc.exe" failonerror="true">
+			<exec executable="sc.exe" failonerror="${failonerror}">
 				<arg value="stop"/>
 				<arg value="@{servicename}"/>
 			</exec>
@@ -76,12 +78,12 @@
 	<target name="StartServices">
 		<for list="${startservicenames}" param="st-servicename">
 		<sequential>
-			<exec executable="sc.exe" failonerror="true">
+			<exec executable="sc.exe" failonerror="${failonerror}">
 				<arg value="config"/>
 				<arg value="@{st-servicename}"/>
 				<arg line="start= auto"/>
 			</exec>
-			<exec executable="sc.exe" failonerror="true">
+			<exec executable="sc.exe" failonerror="${failonerror}">
 				<arg value="start"/>
 				<arg value="@{st-servicename}"/>
 			</exec>
@@ -109,6 +111,7 @@
 	</target>
 	
 	<target name="BackupCurrCorda">
+		<mkdir dir="${CordaDestPath}/wealthStation/${CordaType}" />
 		<move todir="${CordaDestPath}/wealthStation/${CordaType}-${TimeStamp}" preservelastmodified="true">
 			<fileset dir="${CordaDestPath}/wealthStation/${CordaType}"/>
 		</move>
