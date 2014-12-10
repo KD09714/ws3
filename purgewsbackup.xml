@@ -6,6 +6,7 @@
 	<tstamp>
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
 	</tstamp>
+	<property name="proppath" value="${DeployBase}/properties" />
 	<echo message="Timestamp : ${TimeStamp}"/>
 	
 <target name="ZipBackup">
@@ -31,7 +32,7 @@
 	<copy file="${ws3tomcathome}/bin/config.properties" todir="${BackupDir}/properties-${TimeStamp}" preservelastmodified="true" />
 </target>
 
-<target name="PurgeZip" depends="ZipBackup" if="KeepBackupCount">
+<target name="PurgeZip" depends="BackupProp, ZipBackup" if="KeepBackupCount">
 	<purge keep="${KeepBackupCount}">
 		<fileset dir="${BackupDir}" includes="${DeployDir}*.zip"/>
 	</purge>
