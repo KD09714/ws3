@@ -1,5 +1,6 @@
 <!-- Change History-->
 
+<!-- 02/21/2015     Dharmendra Kumar  Added target to Recover from Last Fail                  -->
 <!-- 11/10/2014     Dharmendra Kumar  Added Compareandloadmasterdata target                   -->
 <!-- 11/06/2014     Dharmendra Kumar  Added generation of Authorization Documentation         -->
 <!-- 10/17/2014     Dharmendra Kumar  Clearing work & temp folder of ws3 after new war update -->
@@ -25,12 +26,14 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.04-->
+<!-- rev=5.05-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
 	<property file="cfg/deployws3.cfg"/>
-	<property file="cfg/deployws3-2.cfg" />
+	<property file="cfg/deployws3-2.cfg"/>
+	<property file="cfg/deployws3-3.cfg"/>
+	<property file="cfg/deployws3-4.cfg"/>
 	<property name="sleepsec" value="10" />
 	<property name="failonerror" value="false" />
 	
@@ -96,6 +99,34 @@
 		<echo message="Starting Tomcat Complete.."/>
 	</target>
 	
+	<target name="RecoverFromLastFail" if="lastdeploytime">
+		<if>
+		<available file="${DeployBase}/${DeployDir}-${lastdeploytime}" type="dir" />
+		<then>
+			<copy todir="${DeployBase}/${DeployDir}" preservelastmodified="true">
+				<fileset dir="${DeployBase}/${DeployDir}-${lastdeploytime}" />
+			</copy>
+			<delete dir="${DeployBase}/${DeployDir}-${lastdeploytime}" failonerror="false"/>
+		</then>
+		<else>
+			<echo message="${DeployBase}/${DeployDir}-${lastdeploytime} does not exists." />
+			<if>
+			<available file="${BackupDir}/config-${lastdeploytime}" type="dir" />
+			<then>
+				<copy file="${BackupDir}/config-${lastdeploytime}/LoadCompanyBundleClient.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
+				<copy file="${BackupDir}/config-${lastdeploytime}/variables.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
+				<copy file="${BackupDir}/config-${lastdeploytime}/servlet-api.jar" todir="${DeployBase}/${DeployDir}/WEB-INF/lib" />
+				<copy file="${BackupDir}/config-${lastdeploytime}/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs"/>
+				<delete dir="${BackupDir}/config-${lastdeploytime}" />
+			</then>
+			<else>
+				<echo message="${BackupDir}/config-${lastdeploytime} does not exists." />
+			</else>
+			</if>
+		</else>
+		</if>
+	</target>
+	
 	<target name="BackupCfgFiles">
 		<copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/${authxml}" todir="${BackupDir}/config-${TimeStamp}" preservelastmodified="true"/>
 		<copy file="${DeployBase}/${DeployDir}/WEB-INF/batchjobs/LoadCompanyBundleClient.bat" todir="${BackupDir}/config-${TimeStamp}" />
@@ -105,9 +136,11 @@
 	</target>
 
 	<target name="BackupCurrDeployment">
+		<echo message="lastdeploytime=${TimeStamp}" file="cfg/deployws3-4.cfg" />
 		<move todir="${DeployBase}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
 			<fileset dir="${DeployBase}/${DeployDir}"/>
 		</move>
+		<delete file="cfg/deployws3-4.cfg" />
 	</target>
 	
 	<target name="BackupCurrCorda">
@@ -128,6 +161,7 @@
 		<copy file="${BackupDir}/config-${TimeStamp}/variables.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
 		<copy file="${BackupDir}/config-${TimeStamp}/servlet-api.jar" todir="${DeployBase}/${DeployDir}/WEB-INF/lib" />
 		<copy file="${BackupDir}/config-${TimeStamp}/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs"/>
+		<delete dir="${BackupDir}/config-${TimeStamp}" />
 	</target>
 
 	<target name="CompareAndLoadsql">
@@ -208,12 +242,12 @@
 	<target name="StopCorda">
 		<exec executable="sc.exe" failonerror="false">
 			<arg value="config"/>
-			<arg value="@{cordaservicename}"/>
+			<arg value="${cordaservicename}"/>
 			<arg line="start= disabled"/>
 		</exec>
 		<exec executable="sc.exe" failonerror="true">
 			<arg value="stop"/>
-			<arg value="@{cordaservicename}"/>
+			<arg value="${cordaservicename}"/>
 		</exec>
 		<sleep seconds="${sleepsec}"/>
 	</target>
@@ -221,12 +255,12 @@
 	<target name="StartCorda">
 		<exec executable="sc.exe" failonerror="false">
 			<arg value="config"/>
-			<arg value="@{cordaservicename}"/>
+			<arg value="${cordaservicename}"/>
 			<arg line="start= auto"/>
 		</exec>
 		<exec executable="sc.exe" failonerror="true">
 			<arg value="start"/>
-			<arg value="@{cordaservicename}"/>
+			<arg value="${cordaservicename}"/>
 		</exec>
 		<sleep seconds="${sleepsec}"/>
 	</target>
@@ -256,7 +290,7 @@
 		</if>
 	</target>
 	
-	<target name="CompleteDeploy" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="CompleteDeploy" depends="StopEnv, RecoverFromLastFail, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, CompareAndLoadsql, ExecuteWS3sql, CompareAndLoadMasterData, LoadMasterData, RunOneTimesql, LoadEntitlements, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
@@ -270,7 +304,7 @@
 		<antcall target="CompareAndLoadJob" />
 	</target>
 
-	<target name="CompleteDeploy2" depends="StopEnv, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
+	<target name="CompleteDeploy2" depends="StopEnv, RecoverFromLastFail, BackupCfgFiles, BackupCurrDeployment, CopyExtractLatestWar, RestoreCfgFiles, GenerateAuthDoc, UpdateCorda, CleanTempDir, StartEnv">
 		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
 		<echo message=" Moving the backup directories...!!"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}"/>
