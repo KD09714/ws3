@@ -1,0 +1,151 @@
+<!-- Change History-->
+
+<!-- 04/26/2015		Dharmendra Kumar  Initial Coding to Support Automated CSA Deployment    -->
+<!-- rev=1.00-->
+<project name="CSAAutoDeploy" default="CSADeploy" basedir="..">
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	<!--taskdef name="grep" classname="ise.antelope.tasks.Find"/-->
+	<property file="cfg/deploycsa.cfg"/>
+	<property name="sleepsec" value="10" />
+	<property name="failonerror" value="false" />
+	
+	<tstamp>
+		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
+	</tstamp>
+	<echo message="Timestamp : ${TimeStamp}"/>
+
+	<target name="StopServices">
+		<for list="${stopservicenames}" param="servicename">
+		<sequential>
+			<exec executable="sc.exe" failonerror="${failonerror}">
+				<arg value="config"/>
+				<arg value="@{servicename}"/>
+				<arg line="start= disabled"/>
+			</exec>
+			<exec executable="sc.exe" failonerror="${failonerror}">
+				<arg value="stop"/>
+				<arg value="@{servicename}"/>
+			</exec>
+			<sleep seconds="${sleepsec}"/>	
+		</sequential>
+		</for>
+	</target>
+
+	<target name="KillPipeman" if="KillProcess">
+		<exec executable="taskkill">
+			<arg value="/F"/>
+			<arg value="/IM"/>
+			<arg value="${KillProcess}"/>
+		</exec>
+	</target>
+	
+	<target name="StopEnv" depends="KillPipeman, StopServices">
+		<echo message="Stopping Tomcat Complete.."/>
+	</target>
+	
+	<target name="StartServices">
+		<for list="${startservicenames}" param="st-servicename">
+		<sequential>
+			<exec executable="sc.exe" failonerror="${failonerror}">
+				<arg value="config"/>
+				<arg value="@{st-servicename}"/>
+				<arg line="start= auto"/>
+			</exec>
+			<exec executable="sc.exe" failonerror="${failonerror}">
+				<arg value="start"/>
+				<arg value="@{st-servicename}"/>
+			</exec>
+			<sleep seconds="${sleepsec}"/>	
+		</sequential>
+		</for>
+	</target>
+	
+	<target name="StartEnv" depends="StartServices">
+		<echo message="Starting Tomcat Complete.."/>
+	</target>
+	
+	
+	<target name="BackupCurrDeployment">
+		<mkdir dir="${DeployBase}/${DeployDir}"/>
+		<move todir="${DeployBase}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
+			<fileset dir="${DeployBase}/${DeployDir}"/>
+		</move>
+	</target>
+
+	<target name="CopyExtractLatestWar">
+		<move file="${WarSourcePath}/${CSAWar}" todir="${WarDestPath}" preservelastmodified="true"/>
+		<unwar src="${WarDestPath}/${CSAWar}" dest="${DeployBase}/${DeployDir}"/>
+	</target>
+
+	<target name="ExecuteDBSetup">
+		<echo message="Setting Database configuration." />
+		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/dbsetup/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF/dbsetup" inheritAll="true" />
+	</target>
+	
+	<target name="CSADeploy">
+		<echo message="Comparing timestamp of war." />
+		<uptodate targetfile="${WarDestPath}/${CSAWar}.deployed" srcfile="${WarSourcePath}/${CSAWar}" property="WarUpToDate"/>
+	
+		<if>
+		<equals arg1="${WarUpToDate}" arg2="true"/>
+		<then>
+			<echo message="Target is Up-To-Date, Skipping Deployment." />
+		</then>
+		<else>	
+			<antcall target="CompleteDeploy" />
+		</else>
+		</if>
+	</target>
+	
+	<target name="CompleteDeploy" depends="StopEnv, BackupCurrDeployment, CopyExtractLatestWar, ExecuteDBSetup, CleanTempDir, IAFPatch, StartEnv">
+		<echo message=" NOTE : Deployment Complete and Application is up...!!"/>
+		<echo message=" Moving the backup directories...!!"/>
+		<delete dir="${BackupDir}/config-${TimeStamp}"/>
+		<move todir="${BackupDir}/${DeployDir}-${TimeStamp}" preservelastmodified="true">
+			<fileset dir="${DeployBase}/${DeployDir}-${TimeStamp}"/>
+		</move>
+		<move file="${WarDestPath}/${CSAWar}" tofile="${WarDestPath}/${CSAWar}.deployed" preservelastmodified="true"/>
+	</target>
+	
+	<target name="RestartEnv" depends="StopEnv, StartEnv">
+		<echo message="Tomcat restart completed."/>
+	</target>
+	
+	<target name="IAFPatch">
+		<delete dir="tools/work" />
+		<delete dir="tools/repository" />
+		<copy todir="tools/repository" >
+			<fileset dir="${WarSourcePath}" >
+				<include name="IAFIdP_Patch-v4.2.1_*" />
+			</fileset>
+		</copy>
+		
+		<for param="patchname">
+			<path>
+                <fileset dir="tools/repository">
+                    <include name="IAFIdP_Patch-v4.2.1_*"/>
+                </fileset>
+			</path>
+			<sequential>
+				<var name="csa.patch.patches" unset="true" />
+				<basename property="csa.patch.patches" file="@{patchname}"/>
+				<echo message="${csa.patch.patches}" />
+				<ant antfile="build.xml" dir="tools" inheritAll="true" />
+			</sequential>
+		</for>	
+	</target>
+	
+	<target name="CleanTempDir">
+		<for list="${dir-to-cleanup}" param = "tempdir">
+		<sequential>
+			<echo message="Cleaning up ${csatomcathome}/@{tempdir} directory." />
+			<mkdir dir="${csatomcathome}/@{tempdir}" />
+			<delete includeemptydirs="true" failonerror="false" >
+				<fileset dir="${csatomcathome}/@{tempdir}">
+					<include name="**/*" />
+				</fileset>
+			</delete>
+		</sequential>
+		</for>
+	</target>
+</project>
