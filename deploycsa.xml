@@ -1,13 +1,15 @@
 <!-- Change History-->
 
+<!-- 06/19/2015     Dharmendra Kumar  Edit jmx port entry. -->
 <!-- 04/26/2015		Dharmendra Kumar  Initial Coding to Support Automated CSA Deployment    -->
-<!-- rev=1.00-->
+<!-- rev=1.01-->
 <project name="CSAAutoDeploy" default="CSADeploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<!--taskdef name="grep" classname="ise.antelope.tasks.Find"/-->
 	<property file="cfg/deploycsa.cfg"/>
 	<property name="sleepsec" value="10" />
 	<property name="failonerror" value="false" />
+	<property name="jmx.connector.registry.port" value="1111" />
 	
 	<tstamp>
 		<format property="TimeStamp" pattern="yyyyMMdd-HHmm"/>
@@ -75,6 +77,11 @@
 	<target name="CopyExtractLatestWar">
 		<move file="${WarSourcePath}/${CSAWar}" todir="${WarDestPath}" preservelastmodified="true"/>
 		<unwar src="${WarDestPath}/${CSAWar}" dest="${DeployBase}/${DeployDir}"/>
+		<replaceregexp	file="${DeployBase}/${DeployDir}/WEB-INF/classes/config/props/CSA.properties"
+			match="jmx.connector.registry.port=(.*)"
+			replace="jmx.connector.registry.port=${jmx.connector.registry.port}"
+			byline="true"
+		/>
 	</target>
 
 	<target name="ExecuteDBSetup">
@@ -147,5 +154,12 @@
 			</delete>
 		</sequential>
 		</for>
+	</target>
+	<target name="test">
+			<replaceregexp	file="${DeployBase}/${DeployDir}/WEB-INF/classes/config/props/CSA.properties"
+			match="jmx.connector.registry.port=(.*)"
+			replace="jmx.connector.registry.port=${jmx.connector.registry.port}"
+			byline="true"
+		/>
 	</target>
 </project>
