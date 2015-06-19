@@ -1,5 +1,5 @@
 <!-- Change History-->
-
+<!-- 05/13/2015     Madhu Mahto		  Added property in BackupCfgFiles and RestoreCfgFiles target -->
 <!-- 05/11/2015     Dharmendra Kumar  Added RunAntTarget to run multiple ant targets as required -->
 <!-- 03/05/2015     Dharmendra Kumar  Removed LoadMasterData and Added LoadData Trarget -->
 <!-- 02/21/2015     Dharmendra Kumar  Added target to Recover from Last Fail                  -->
@@ -28,7 +28,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.07-->
+<!-- rev=5.08-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -119,6 +119,8 @@
 				<copy file="${BackupDir}/config-${lastdeploytime}/variables.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
 				<copy file="${BackupDir}/config-${lastdeploytime}/servlet-api.jar" todir="${DeployBase}/${DeployDir}/WEB-INF/lib" />
 				<copy file="${BackupDir}/config-${lastdeploytime}/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs"/>
+				<copy file="${BackupDir}/config-${TimeStamp}/launchLog4jServer.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
+				<copy file="${BackupDir}/config-${TimeStamp}/log4j-client.properties" todir="${DeployBase}/${DeployDir}/WEB-INF/logger"/>
 				<delete dir="${BackupDir}/config-${lastdeploytime}" />
 			</then>
 			<else>
@@ -135,6 +137,8 @@
 		<copy file="${DeployBase}/${DeployDir}/WEB-INF/batchjobs/variables.bat" todir="${BackupDir}/config-${TimeStamp}" />
 		<copy file="${DeployBase}/${DeployDir}/WEB-INF/lib/servlet-api.jar" todir="${BackupDir}/config-${TimeStamp}" />
 		<copy file="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml" todir="${BackupDir}/config-${TimeStamp}" />
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/batchjobs/launchLog4jServer.bat" todir="${BackupDir}/config-${TimeStamp}" />
+		<copy file="${DeployBase}/${DeployDir}/WEB-INF/logger/log4j-client.properties" todir="${BackupDir}/config-${TimeStamp}" />
 	</target>
 
 	<target name="BackupCurrDeployment">
@@ -163,6 +167,8 @@
 		<copy file="${BackupDir}/config-${TimeStamp}/variables.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
 		<copy file="${BackupDir}/config-${TimeStamp}/servlet-api.jar" todir="${DeployBase}/${DeployDir}/WEB-INF/lib" />
 		<copy file="${BackupDir}/config-${TimeStamp}/scheduledJobs.xml" todir="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs"/>
+		<copy file="${BackupDir}/config-${TimeStamp}/launchLog4jServer.bat" todir="${DeployBase}/${DeployDir}/WEB-INF/batchjobs"/>
+		<copy file="${BackupDir}/config-${TimeStamp}/log4j-client.properties" todir="${DeployBase}/${DeployDir}/WEB-INF/logger"/>
 		<delete dir="${BackupDir}/config-${TimeStamp}" />
 	</target>
 
