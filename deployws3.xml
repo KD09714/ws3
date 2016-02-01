@@ -28,7 +28,7 @@
 <!-- 12/06/2011     Dharmendra Kumar  Added support to backup and restore scheduledJobs.xml -->
 <!-- 12/05/2011		Dharmendra Kumar  Included Wrapper Target StopEnv & StartEnv            -->
 <!-- 12/04/2011		Dharmendra Kumar  Initial Coding to Support Automated WS3 Deployment    -->
-<!-- rev=5.08-->
+<!-- rev=5.09-->
 <project name="WS3AutoDeploy" default="WS3Deploy" basedir="..">
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
 	<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
@@ -247,7 +247,7 @@
 		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="generateAuthorizationsDoc" />
 	</target>
 	
-	<target name="StopCorda">
+	<target name="StopCorda" if="cordaservicename">
 		<exec executable="sc.exe" failonerror="false">
 			<arg value="config"/>
 			<arg value="${cordaservicename}"/>
@@ -260,7 +260,7 @@
 		<sleep seconds="${sleepsec}"/>
 	</target>
 	
-	<target name="StartCorda">
+	<target name="StartCorda" if="cordaservicename">
 		<exec executable="sc.exe" failonerror="false">
 			<arg value="config"/>
 			<arg value="${cordaservicename}"/>
