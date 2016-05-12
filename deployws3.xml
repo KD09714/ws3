@@ -1,4 +1,5 @@
 <!-- Change History-->
+<!-- 05/12/2016     Dharmendra Kumar  Edit the firmid before running LoadJobs -->
 <!-- 05/13/2015     Madhu Mahto		  Added property in BackupCfgFiles and RestoreCfgFiles target -->
 <!-- 05/11/2015     Dharmendra Kumar  Added RunAntTarget to run multiple ant targets as required -->
 <!-- 03/05/2015     Dharmendra Kumar  Removed LoadMasterData and Added LoadData Trarget -->
@@ -38,6 +39,7 @@
 	<property file="cfg/deployws3-4.cfg"/>
 	<property name="sleepsec" value="10" />
 	<property name="failonerror" value="false" />
+	<property name="firmid" value="0"/>
 	
 	<if>
 	<available file="cfg/env-variable.cfg" />
@@ -402,6 +404,11 @@
 			<replacefilter token="&lt;Job_ID_for_AFS_BALANCE_JOB&gt;" value="${Job_ID_for_AFS_BALANCE_JOB}" />
 			<replacefilter token="&lt;Job_ID_for_AFS_POSITIONS_JOB&gt;" value="${Job_ID_for_AFS_POSITIONS_JOB}" />
 		</replace>
+		<replaceregexp	file="${DeployBase}/${DeployDir}/WEB-INF/loader/scheduledJobs/scheduledJobs.xml"
+			match="jobParameter name=&quot;COMPANY_ID&quot; value=&quot;0&quot;"
+			replace="jobParameter name=&quot;COMPANY_ID&quot; value=&quot;${firmid}&quot;"
+			byline="true"
+		/>
 		<ant antfile="${DeployBase}/${DeployDir}/WEB-INF/loader/build.xml" dir="${DeployBase}/${DeployDir}/WEB-INF" inheritAll="true" target="doDeleteAndReloadAllJobs" />
 	</target>
 		
